@@ -1,0 +1,101 @@
+ffi.cdef[[ 
+ typedef struct { 
+
+ float x,y,z; 
+
+ } vec3_t_aojnsfdghuinfasiugnhiusfnghsfghsfgh; 
+
+ struct tesla_info_t_ioajdngfhijafgidjnhuangfdhargh { 
+
+ vec3_t_aojnsfdghuinfasiugnhiusfnghsfghsfgh m_pos; 
+
+ vec3_t_aojnsfdghuinfasiugnhiusfnghsfghsfgh m_ang;
+
+ int m_entindex;
+
+ const char *m_spritename;
+
+ float m_flbeamwidth;
+
+ int m_nbeams;
+
+ vec3_t_aojnsfdghuinfasiugnhiusfnghsfghsfgh m_color;
+
+ float m_fltimevis;
+
+ float m_flradius;
+
+ }; 
+
+ typedef void(__thiscall* FX_TeslaFn_iosjfdnghjusfgiuhisfgihsfgjshfgshfj)(struct tesla_info_t_ioajdngfhijafgidjnhuangfdhargh&); 
+]] 
+
+local match = mem.FindPattern("client.dll", "55 8B EC 81 EC ?? ?? ?? ?? 56 57 8B F9 8B 47 18") or error("error match")
+
+local fs_tesla = ffi.cast("FX_TeslaFn_iosjfdnghjusfgiuhisfgihsfgjshfgshfj", match) 
+
+local rf_reference = gui.Reference("Visuals", "World", "Extra")
+
+local bl_check_enable = gui.Checkbox(rf_reference, "visuals.world.extra.tesla_enable", "Enable Tesla on hit", true);
+
+local cl_color_picker = gui.ColorPicker( rf_reference, "visuals.world.extra.tesla_color", "Tesla color", 25, 225, 255, 255)
+
+local int_beam_slider = gui.Slider( rf_reference, "visuals.world.extra.tesla_color", "Tesla beam width", 10, 0, 100)
+
+local int_beamw_slider = gui.Slider( rf_reference, "visuals.world.extra.tesla_width", "Tesla beam radius", 500, 0, 5000)
+
+local int_beamsa_slider = gui.Slider( rf_reference, "visuals.world.extra.tesla_amount", "Tesla amount", 12, 0, 500)
+
+local function on_player_hurt(Event) 
+
+ if(Event:GetName() ~= "player_hurt") then return end
+
+ if true == true then 
+
+ local me = entities.GetLocalPlayer()
+
+ local attacker = entities.GetByUserID(Event:GetInt('attacker'))
+
+ if attacker:GetIndex() == me:GetIndex() then
+
+ local hurt = entities.GetByUserID(Event:GetInt('userid')) 
+
+ local r, g, b, a= cl_color_picker:GetValue()
+
+ local x = math.random(-1000, 1000) 
+
+ local y = math.random(-x, x) 
+
+ local z = math.random(-y, y) 
+
+ local tesla_info = ffi.new("struct tesla_info_t_ioajdngfhijafgidjnhuangfdhargh") 
+
+ tesla_info.m_flbeamwidth = int_beam_slider:GetValue()
+
+ tesla_info.m_flradius = int_beamw_slider:GetValue()
+
+ tesla_info.m_entindex = attacker:GetIndex()
+
+ tesla_info.m_color = {r/255, g/255, b/255} 
+
+ tesla_info.m_pos = { hurt:GetHitboxPosition(6).x, hurt:GetHitboxPosition(6).y, hurt:GetHitboxPosition(6).z } 
+
+ tesla_info.m_ang = {x,y,z} 
+
+ tesla_info.m_fltimevis = 0.75 
+
+ tesla_info.m_nbeams = int_beamsa_slider:GetValue()
+
+ tesla_info.m_spritename = "sprites/physbeam.vmt" 
+
+ fs_tesla(tesla_info)
+
+ end 
+
+ end 
+
+end
+
+client.AllowListener( 'player_hurt' );
+
+callbacks.Register( 'FireGameEvent', 't', on_player_hurt );
